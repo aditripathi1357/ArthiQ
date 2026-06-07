@@ -169,7 +169,7 @@ async def refresh_nse_master() -> int:
                 _cache_timestamp = time.time()
                 _name_lookup = {c.yf_symbol: c.name for c in companies}
                 logger.info(
-                    "NSE master list refreshed: %d companies loaded",
+                    "NSE master list refreshed from remote: %d companies loaded",
                     len(companies),
                 )
                 return len(companies)
@@ -177,12 +177,58 @@ async def refresh_nse_master() -> int:
                 logger.warning("NSE CSV parsed but returned 0 companies")
                 return 0
         except Exception as exc:
-            logger.error("Failed to refresh NSE master list: %s", exc)
+            logger.error("Failed to refresh NSE master list from remote: %s", exc)
+            
+            # Fallback to local cached CSV file
+            try:
+                import os
+                from pathlib import Path
+                fallback_path = Path(__file__).parent.parent / "resources" / "equity_l_cache.csv"
+                if os.path.exists(fallback_path):
+                    logger.info("Attempting to load NSE list from local fallback cache: %s", fallback_path)
+                    with open(fallback_path, "r", encoding="utf-8") as f:
+                        raw = f.read()
+                    companies = _parse_nse_csv(raw)
+                    if companies:
+                        _cache_companies = companies
+                        _cache_timestamp = time.time()
+                        _name_lookup = {c.yf_symbol: c.name for c in companies}
+                        logger.info(
+                            "NSE master list loaded from local fallback cache: %d companies",
+                            len(companies),
+                        )
+                        return len(companies)
+                    else:
+                        logger.warning("Local fallback CSV parsed but returned 0 companies")
+                else:
+                    logger.error("Local fallback cache file not found at: %s", fallback_path)
+            except Exception as fallback_exc:
+                logger.error("Failed to load local fallback cache: %s", fallback_exc)
+            
             return 0
 
 
 async def _ensure_loaded():
     """Lazily load the master list if not cached or stale."""
+    global _cache_companies, _cache_timestamp, _name_lookup
+    if not _cache_companies:
+        # Load local fallback first on startup so the app is instantly ready without blocking
+        try:
+            import os
+            from pathlib import Path
+            fallback_path = Path(__file__).parent.parent / "resources" / "equity_l_cache.csv"
+            if os.path.exists(fallback_path):
+                with open(fallback_path, "r", encoding="utf-8") as f:
+                    raw = f.read()
+                companies = _parse_nse_csv(raw)
+                if companies:
+                    _cache_companies = companies
+                    _cache_timestamp = time.time()
+                    _name_lookup = {c.yf_symbol: c.name for c in companies}
+                    logger.info("NSE master list pre-loaded from local fallback cache: %d companies", len(companies))
+        except Exception as e:
+            logger.error("Failed to pre-load local fallback cache on startup: %s", e)
+
     if not _cache_companies or (
         time.time() - _cache_timestamp > CACHE_TTL_SECONDS
     ):
