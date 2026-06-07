@@ -67,11 +67,11 @@ Render will build and run your FastAPI app directly using python.
    *   `EXCHANGE_RATE_API_KEY` = *(Your Forex API Key)*
    *   `SMTP_HOST` = `smtp.gmail.com`
    *   `SMTP_PORT` = `587`
-   *   `SMTP_USER` = `arthiqaiofficial@gmail.com`
-   *   `SMTP_PASSWORD` = `rvcw tlcl yjsf xeky`
-   *   `SMTP_FROM` = `arthiqaiofficial@gmail.com`
-   *   `TWILIO_ACCOUNT_SID` = `ACb833bc7394d144c3f1ceeb0e45fa9d69`
-   *   `TWILIO_AUTH_TOKEN` = `94662207bbd61f4bfc0448c9a764ef73`
+   *   `SMTP_USER` = `your_gmail_address@gmail.com`
+   *   `SMTP_PASSWORD` = `your_gmail_app_password`
+   *   `SMTP_FROM` = `your_gmail_address@gmail.com`
+   *   `TWILIO_ACCOUNT_SID` = `YOUR_TWILIO_ACCOUNT_SID`
+   *   `TWILIO_AUTH_TOKEN` = `YOUR_TWILIO_AUTH_TOKEN`
    *   `TWILIO_WHATSAPP_FROM` = `whatsapp:+14155238886`
 6. Click **Create Web Service**.
 7. Once deployment starts, note the live URL of your backend (e.g., `https://smartfin-backend.onrender.com`). You will need this for frontend configuration.
@@ -106,8 +106,8 @@ Vercel will compile and host your frontend static bundle.
    *   **Output Directory**: `dist`
 5. Expand **Environment Variables** and add the following:
    *   `VITE_API_URL` = *(Your Render backend URL from Step 3, e.g. `https://smartfin-backend.onrender.com`)*
-   *   `VITE_SUPABASE_URL` = `https://hrwvqztqdpqcrlrrwpjl.supabase.co`
-   *   `VITE_SUPABASE_ANON_KEY` = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+   *   `VITE_SUPABASE_URL` = `YOUR_SUPABASE_URL`
+   *   `VITE_SUPABASE_ANON_KEY` = `YOUR_SUPABASE_ANON_KEY`
 6. Click **Deploy**.
 7. Vercel will build your application and generate a live URL (e.g., `https://smartfin-frontend.vercel.app`).
 
