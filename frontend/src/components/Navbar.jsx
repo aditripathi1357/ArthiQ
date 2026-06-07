@@ -295,7 +295,7 @@ export default function Navbar() {
             </div>
 
             {/* ── CENTER: Search ────────────────────────────────────────── */}
-            <form onSubmit={handleSubmit} ref={searchRef} className="relative flex-1 max-w-2xl">
+            <form onSubmit={handleSubmit} ref={searchRef} className="md:relative flex-1 max-w-2xl">
               <div className="relative">
                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                 <input
@@ -303,7 +303,7 @@ export default function Navbar() {
                   value={query}
                   onChange={(e) => handleSearch(e.target.value)}
                   onFocus={() => results.length > 0 && setShowResults(true)}
-                  placeholder="Search stocks… e.g. Reliance, TCS, HDFC, Infosys"
+                  placeholder="Search stocks..."
                   className="w-full pl-11 pr-10 py-2.5 border border-border rounded-xl text-sm placeholder-text-muted focus:outline-none focus:border-saffron/60 focus:ring-2 focus:ring-saffron/15 transition-all"
                   style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                 />
@@ -317,7 +317,7 @@ export default function Navbar() {
 
               {showResults && (
                 <div
-                  className="absolute top-full mt-2 w-full border border-border rounded-2xl shadow-2xl max-h-80 overflow-y-auto z-50"
+                  className="absolute top-full left-4 right-4 md:left-0 md:right-auto md:w-full mt-2 border border-border rounded-2xl shadow-2xl max-h-80 overflow-y-auto z-50"
                   style={{ backgroundColor: 'var(--bg-card)' }}
                 >
                   {searchLoading ? (
@@ -362,7 +362,7 @@ export default function Navbar() {
               <button
                 onClick={handleGlobalRefresh}
                 disabled={refreshing}
-                className="flex items-center justify-center w-10 h-10 rounded-xl border border-border transition-all hover:border-saffron/40 hover:text-saffron"
+                className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl border border-border transition-all hover:border-saffron/40 hover:text-saffron"
                 style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
                 title="Refresh live data"
               >
@@ -372,7 +372,7 @@ export default function Navbar() {
               {/* ── Theme Toggle ──────────────────────────────────────── */}
               <button
                 onClick={toggleTheme}
-                className="flex items-center justify-center w-10 h-10 rounded-xl border border-border transition-all hover:border-saffron/40"
+                className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl border border-border transition-all hover:border-saffron/40"
                 style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
@@ -464,7 +464,7 @@ export default function Navbar() {
                     Log In
                   </button>
                   <button onClick={() => { setAuthModalIsLogin(false); setIsAuthModalOpen(true) }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-saffron text-white hover:bg-saffron/90 transition-all shadow-lg shadow-saffron/25 active:scale-95">
+                    className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-saffron text-white hover:bg-saffron/90 transition-all shadow-lg shadow-saffron/25 active:scale-95">
                     Get Started
                   </button>
                 </>
