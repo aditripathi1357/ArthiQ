@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { MessageSquare, Send, X, Bot, User, RefreshCw, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 
@@ -60,7 +61,10 @@ What would you like to explore today?`
 }
 
 export default function ChatAssistant() {
+  const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
+  
+  if (location.pathname === '/chat') return null
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
