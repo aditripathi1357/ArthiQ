@@ -106,7 +106,7 @@ async def get_all_forex_rates(
     if not live_data or not live_data.get("rates"):
         raise HTTPException(
             status_code=503,
-            detail="Forex rates unavailable. Set EXCHANGE_RATE_API_KEY in .env to enable live rates.",
+            detail="Forex rates unavailable at the moment. Please try again later.",
         )
 
     res_rates = ForexRatesResponse(
@@ -169,7 +169,7 @@ async def get_inr_rates(
     if not live_data or "INR" not in live_data.get("rates", {}):
         raise HTTPException(
             status_code=503,
-            detail="INR rates unavailable. Set EXCHANGE_RATE_API_KEY in .env.",
+            detail="INR rates unavailable at the moment. Please try again later.",
         )
 
     inr_rate = live_data["rates"]["INR"]
@@ -243,7 +243,7 @@ async def get_forex_pair(
     if not live_data or target not in live_data.get("rates", {}):
         raise HTTPException(
             status_code=404,
-            detail=f"Rate for {pair.upper()} not found. Check currency codes or set EXCHANGE_RATE_API_KEY.",
+            detail=f"Rate for {pair.upper()} not found. Check currency codes.",
         )
 
     return ForexPairResponse(

@@ -142,7 +142,7 @@ async def get_company_news(
     if not articles:
         raise HTTPException(
             status_code=404,
-            detail=f"No news found for '{symbol}'. Set NEWS_API_KEY in .env for live news.",
+            detail=f"No news found for '{symbol}'.",
         )
 
     res_live = CompanyNewsResponse(

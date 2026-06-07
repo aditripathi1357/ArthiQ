@@ -616,7 +616,7 @@ export default function Dashboard() {
             <div className="p-12 text-center border border-dashed border-slate-200 rounded-2xl">
               <Newspaper size={36} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-500 font-semibold">No market news available</p>
-              <p className="text-slate-400 text-sm mt-1">Ensure <code className="text-saffron font-mono">NEWS_API_KEY</code> is configured in backend .env</p>
+              <p className="text-slate-400 text-sm mt-1">Live market news will appear here when available</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">

@@ -108,7 +108,7 @@ export default function ForexPage() {
           </div>
         ) : Object.keys(allRates).length === 0 ? (
           <div className="glass-card p-6 text-center text-text-muted text-sm">
-            No rates available. Ensure EXCHANGE_RATE_API_KEY is configured.
+            No exchange rates available at the moment. Please try again later.
           </div>
         ) : (
           <div className="glass-card overflow-hidden">
