@@ -125,13 +125,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="w-full px-6 lg:px-10 xl:px-16 py-6 min-h-[calc(100vh-4rem)] flex flex-col">
+    <div className="w-full px-6 lg:px-10 xl:px-16 py-6 flex-1 flex flex-col">
       {/* Back Button */}
       <Link to="/" className="inline-flex items-center gap-2 text-base font-bold text-text-secondary hover:text-saffron transition-colors mb-6 shrink-0">
         <ArrowLeft size={16} className="stroke-[3px]" /> Back to Dashboard
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 items-stretch max-h-[720px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0">
         {/* Left Info Panel */}
         <div className="flex flex-col gap-4">
           <div className="card p-5 flex flex-col justify-between h-full bg-gradient-to-b from-white to-slate-50/50">
@@ -188,7 +188,7 @@ export default function ChatPage() {
         </div>
 
         {/* Right Chat Console */}
-        <div className="card overflow-hidden flex flex-col h-[600px] lg:h-full bg-white shadow-xl relative">
+        <div className="card overflow-hidden flex flex-col min-h-[520px] lg:h-full bg-white shadow-xl relative">
           {/* Header */}
           <div className="px-6 py-5 border-b border-slate-800 bg-slate-900 text-white flex items-center justify-between">
             <div className="flex items-center gap-3.5">

@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ErrorBoundary from './components/ErrorBoundary'
 import { AuthProvider } from './contexts/AuthContext'
@@ -31,7 +31,7 @@ const VirtualTradingPage = lazy(() => import('./pages/VirtualTradingPage'))
 function PageLoader() {
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen gap-4"
+      className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-4"
       style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-muted)' }}
     >
       <div
@@ -46,8 +46,12 @@ function PageLoader() {
   )
 }
 
+// Routes where Footer should be hidden
+const NO_FOOTER_ROUTES = ['/chat']
+
 export default function App() {
   const { pathname } = useLocation()
+  const hideFooter = NO_FOOTER_ROUTES.some(route => matchPath(route, pathname))
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -56,9 +60,12 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <div
+          className="min-h-screen flex flex-col"
+          style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+        >
           <Navbar />
-          <main className="pt-16 flex-1">
+          <main className={`pt-16 flex-1 flex flex-col`}>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
@@ -83,7 +90,7 @@ export default function App() {
               </Routes>
             </Suspense>
           </main>
-          <Footer />
+          {!hideFooter && <Footer />}
           <ChatAssistant />
         </div>
       </AuthProvider>
