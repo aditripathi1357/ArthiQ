@@ -1,0 +1,35 @@
+# SmartFin Backend Python Dependencies
+# ======================================
+
+# -- Web Framework --------------------------------------------------------
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# -- Database -------------------------------------------------------------
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30.0              # Async PostgreSQL driver
+psycopg2-binary>=2.9.10      # Sync driver (for Alembic migrations)
+alembic>=1.14.0
+
+# -- Settings & Validation -----------------------------------------------
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# -- Data Sources ---------------------------------------------------------
+yfinance>=0.2.50
+httpx>=0.28.0                # Async HTTP client (forex, news APIs)
+
+# -- AI / LLM ------------------------------------------------------------
+openai>=1.60.0
+
+# -- Background Scheduling -----------------------------------------------
+apscheduler>=3.10.4
+
+# -- Utilities ------------------------------------------------------------
+python-dotenv>=1.0.1
+
+# -- Session 9: Multi-source news, free AI, economic calendar -------------
+feedparser>=6.0.11          # RSS feed parsing (ET, Moneycontrol, Business Standard)
+vaderSentiment>=3.3.2       # Free sentiment analysis (no API call needed)
+groq>=1.0.0                 # Free AI via Groq (llama-3.3-70b-versatile)
+investpy>=1.0.8             # Indian economic calendar data

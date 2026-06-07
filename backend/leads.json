@@ -1,0 +1,44 @@
+[
+  {
+    "name": "User",
+    "email": "user@example.com",
+    "whatsapp": "+919876543210",
+    "request": "investment guidance",
+    "saved_at": "2026-06-07T03:19:41.512875"
+  },
+  {
+    "name": "User",
+    "email": "user@example.com",
+    "whatsapp": "+91 98765 43210",
+    "request": "investment guidance",
+    "saved_at": "2026-06-07T03:22:21.578711"
+  },
+  {
+    "name": "User",
+    "email": "user@example.com",
+    "whatsapp": "+919876543210",
+    "request": "investment guidance",
+    "saved_at": "2026-06-07T03:23:22.449914"
+  },
+  {
+    "name": "User",
+    "email": "user@example.com",
+    "whatsapp": "+91 98765 43210",
+    "request": "investment advice",
+    "saved_at": "2026-06-07T03:23:47.778309"
+  },
+  {
+    "name": "User",
+    "email": "user@example.com",
+    "whatsapp": "+919876543210",
+    "request": "investment advice",
+    "saved_at": "2026-06-07T03:23:56.461044"
+  },
+  {
+    "name": "ArthIQ",
+    "email": "arthiq@arthiq.com",
+    "whatsapp": "1234567890",
+    "request": "stock suggestion",
+    "saved_at": "2026-06-07T03:45:27.557728"
+  }
+]
