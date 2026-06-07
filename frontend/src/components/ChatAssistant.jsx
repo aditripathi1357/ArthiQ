@@ -63,14 +63,15 @@ What would you like to explore today?`
 export default function ChatAssistant() {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
-  
-  if (location.pathname === '/chat') return null
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
   
   const messagesEndRef = useRef(null)
+
+  // Don't render on the dedicated chat page
+  if (location.pathname === '/chat') return null
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -119,7 +120,7 @@ export default function ChatAssistant() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       {/* Toggle Button */}
       {!isOpen && (
         <button

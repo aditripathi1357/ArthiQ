@@ -30,9 +30,18 @@ const VirtualTradingPage = lazy(() => import('./pages/VirtualTradingPage'))
 
 function PageLoader() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <div className="w-10 h-10 border-4 border-slate-700 border-t-saffron rounded-full animate-spin" />
-      <span className="text-sm font-semibold text-text-muted">Loading page...</span>
+    <div
+      className="flex flex-col items-center justify-center min-h-screen gap-4"
+      style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-muted)' }}
+    >
+      <div
+        className="w-10 h-10 rounded-full animate-spin"
+        style={{
+          border: '4px solid var(--border)',
+          borderTopColor: '#FF9933',
+        }}
+      />
+      <span className="text-sm font-semibold">Loading...</span>
     </div>
   )
 }
