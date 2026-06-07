@@ -177,7 +177,7 @@ async def refresh_nse_master() -> int:
                 logger.warning("NSE CSV parsed but returned 0 companies")
                 return 0
         except Exception as exc:
-            logger.error("Failed to refresh NSE master list from remote: %s", exc)
+            logger.info("NSE remote list fetch blocked or unavailable (common in cloud environments due to Akamai). Falling back to local cached master list.")
             
             # Fallback to local cached CSV file
             try:
