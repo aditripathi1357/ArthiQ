@@ -170,6 +170,7 @@ export default function Navbar() {
   const [showResults,     setShowResults]     = useState(false)
   const [searchLoading,   setSearchLoading]   = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [authModalIsLogin, setAuthModalIsLogin] = useState(true)
   const [mobileMenuOpen,  setMobileMenuOpen]  = useState(false)
   const [userMenuOpen,    setUserMenuOpen]    = useState(false)
   const [notifOpen,       setNotifOpen]       = useState(false)
@@ -457,12 +458,12 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <button onClick={() => setIsAuthModalOpen(true)}
+                  <button onClick={() => { setAuthModalIsLogin(true); setIsAuthModalOpen(true) }}
                     className="hidden sm:flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold border border-border transition-all hover:border-saffron/40 hover:text-saffron"
                     style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
                     Log In
                   </button>
-                  <button onClick={() => setIsAuthModalOpen(true)}
+                  <button onClick={() => { setAuthModalIsLogin(false); setIsAuthModalOpen(true) }}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-saffron text-white hover:bg-saffron/90 transition-all shadow-lg shadow-saffron/25 active:scale-95">
                     Get Started
                   </button>
@@ -505,7 +506,7 @@ export default function Navbar() {
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </button>
             {!user && (
-              <button onClick={() => { setIsAuthModalOpen(true); setMobileMenuOpen(false) }}
+              <button onClick={() => { setAuthModalIsLogin(false); setIsAuthModalOpen(true); setMobileMenuOpen(false) }}
                 className="w-full mt-2 py-3 rounded-xl bg-saffron text-white text-sm font-bold shadow-lg shadow-saffron/20">
                 Get Started — Free
               </button>
@@ -514,7 +515,7 @@ export default function Navbar() {
         )}
       </nav>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialIsLogin={authModalIsLogin} />
     </>
   )
 }

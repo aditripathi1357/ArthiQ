@@ -146,7 +146,7 @@ export default function AIInsightsPage() {
               <div>
                 <span className="text-sm font-bold text-text-primary block">AI Analysis</span>
                 <span className="text-[10px] text-saffron font-semibold uppercase tracking-wider">
-                  Groq · GPT-4o · VADER
+                  ArthiQ AI
                 </span>
               </div>
             </div>
@@ -229,13 +229,13 @@ export default function AIInsightsPage() {
               <div className="flex justify-between">
                 <span className="text-text-muted">Models</span>
                 <span className="text-text-primary font-medium text-right">
-                  Groq Llama 3.3
-                  <span className="block text-[10px] text-text-muted font-normal">GPT-4o-mini (backup)</span>
+                  ArthiQ AI Engine
+                  <span className="block text-[10px] text-text-muted font-normal">NLP Analysis</span>
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Sentiment</span>
-                <span className="text-text-primary font-medium">VADER (free)</span>
+                <span className="text-text-primary font-medium">ArthiQ Sentiment</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Data Sources</span>

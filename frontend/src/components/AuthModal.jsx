@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
 // STEP: 'form' | 'otp' | 'success'
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, initialIsLogin = true }) {
   const { signInWithGoogle, signInWithEmail, signUp } = useAuth()
-  const [isLogin, setIsLogin] = useState(true)
+  const [isLogin, setIsLogin] = useState(initialIsLogin)
   const [step, setStep] = useState('form') // 'form' | 'otp' | 'success'
 
   const [email, setEmail] = useState('')
@@ -15,10 +15,16 @@ export default function AuthModal({ isOpen, onClose }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // OTP state — 8 individual digit inputs (Supabase sends 8-digit tokens)
-  const OTP_LENGTH = 8
-  const [otp, setOtp] = useState(Array(8).fill(''))
-  const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef(), useRef()]
+  // OTP state — 6 individual digit inputs (Supabase sends 6-digit tokens by default)
+  const OTP_LENGTH = 6
+  const [otp, setOtp] = useState(Array(6).fill(''))
+  const otpRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()]
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLogin(initialIsLogin)
+    }
+  }, [isOpen, initialIsLogin])
 
   if (!isOpen) return null
 
@@ -28,7 +34,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setPassword('')
     setFullName('')
     setError('')
-    setOtp(Array(8).fill(''))
+    setOtp(Array(6).fill(''))
   }
 
   const handleClose = () => {
@@ -47,8 +53,15 @@ export default function AuthModal({ isOpen, onClose }) {
         if (signInError) throw signInError
         handleClose()
       } else {
-        const { error: signUpError } = await signUp(email, password, fullName)
-        if (signUpError) throw signUpError
+        const signUpResult = await signUp(email, password, fullName)
+        if (signUpResult.error) throw signUpResult.error
+        
+        // If identities is empty, the user already exists
+        const user = signUpResult.data?.user
+        if (user && user.identities && user.identities.length === 0) {
+          throw new Error('An account with this email already exists. Please log in instead.')
+        }
+        
         // Go to OTP step — Supabase sends a 6-digit OTP to the email
         setStep('otp')
       }
