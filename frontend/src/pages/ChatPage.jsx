@@ -125,16 +125,20 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="w-full px-6 lg:px-10 xl:px-16 py-6 flex-1 flex flex-col">
+    <div
+      className="w-full px-6 lg:px-10 xl:px-16 py-6 flex flex-col"
+      style={{ height: 'calc(100vh - 4rem)' }}
+    >
       {/* Back Button */}
-      <Link to="/" className="inline-flex items-center gap-2 text-base font-bold text-text-secondary hover:text-saffron transition-colors mb-6 shrink-0">
+      <Link to="/" className="inline-flex items-center gap-2 text-base font-bold text-text-secondary hover:text-saffron transition-colors mb-4 shrink-0">
         <ArrowLeft size={16} className="stroke-[3px]" /> Back to Dashboard
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0">
-        {/* Left Info Panel */}
-        <div className="flex flex-col gap-4">
-          <div className="card p-5 flex flex-col justify-between h-full bg-gradient-to-b from-white to-slate-50/50">
+      {/* min-h-0 is critical on flex children so they can shrink below content size */}
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0 overflow-hidden">
+        {/* Left Info Panel — scrolls on mobile, fixed on desktop */}
+        <div className="flex flex-col gap-4 min-h-0 overflow-y-auto lg:overflow-hidden">
+          <div className="card p-5 flex flex-col justify-between lg:h-full bg-gradient-to-b from-white to-slate-50/50" style={{ minHeight: 0 }}>
             <div>
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-saffron/15 flex items-center justify-center overflow-hidden">
@@ -187,8 +191,8 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Right Chat Console */}
-        <div className="card overflow-hidden flex flex-col min-h-[520px] lg:h-full bg-white shadow-xl relative">
+        {/* Right Chat Console — takes all remaining height */}
+        <div className="card overflow-hidden flex flex-col min-h-0 h-full bg-white shadow-xl relative">
           {/* Header */}
           <div className="px-6 py-5 border-b border-slate-800 bg-slate-900 text-white flex items-center justify-between">
             <div className="flex items-center gap-3.5">
@@ -216,8 +220,8 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-4">
+                    {/* Messages Area — flex-1 + min-h-0 allows it to shrink and scroll */}
+          <div className="flex-1 overflow-y-auto min-h-0 p-5 bg-slate-50 space-y-4">
             {messages.map((msg, idx) => {
               const isAssistant = msg.role === 'assistant'
               return (

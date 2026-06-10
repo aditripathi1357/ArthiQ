@@ -25,7 +25,7 @@ const pnlColor = (n) => Number(n) >= 0 ? '#16a34a' : '#dc2626'
 const pnlBg   = (n) => Number(n) >= 0 ? '#16a34a15' : '#dc262615'
 
 export default function VirtualTradingPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const userId   = user?.id
 
   const [activeTab, setActiveTab] = useState('portfolio')
@@ -190,6 +190,21 @@ export default function VirtualTradingPage() {
   }
 
   // ── Guard ────────────────────────────────────────────────────────────────────
+  // Show spinner while Supabase auth is still resolving — prevents false "Sign in Required"
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-10 h-10 rounded-full animate-spin"
+            style={{ border: '3px solid var(--border)', borderTopColor: '#FF9933' }}
+          />
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>

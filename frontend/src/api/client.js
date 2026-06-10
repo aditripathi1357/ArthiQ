@@ -2,11 +2,68 @@ import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
+  console.warn('[ArthiQ] VITE_API_URL is not set — API calls will fail in production!')
+}
+
+// ── Axios instance ─────────────────────────────────────────────────────────
+// Timeout is 45s to survive Render free-tier cold starts (can take 30-60s)
 const api = axios.create({
   baseURL: BASE,
-  timeout: 10000,  // 10s — surfaces slow requests faster than the old 30s
+  timeout: 45000,
   headers: { 'Content-Type': 'application/json' },
 })
+
+// ── Retry interceptor — 1 automatic retry on network/timeout errors ─────────
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config
+    // Only retry once, and only on timeout or network errors (not 4xx/5xx)
+    if (
+      config &&
+      !config._retried &&
+      (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response)
+    ) {
+      config._retried = true
+      // Brief pause before retry
+      await new Promise((r) => setTimeout(r, 2000))
+      return api(config)
+    }
+    return Promise.reject(error)
+  }
+)
+
+// ── Slow-request tracker (exposes cold-start state to UI) ──────────────────
+let _slowListeners = []
+let _isSlow = false
+
+export function onSlowRequest(fn) {
+  _slowListeners.push(fn)
+  return () => { _slowListeners = _slowListeners.filter((l) => l !== fn) }
+}
+
+api.interceptors.request.use((config) => {
+  const timer = setTimeout(() => {
+    _isSlow = true
+    _slowListeners.forEach((fn) => fn(true))
+  }, 8000) // warn after 8s
+  config._slowTimer = timer
+  return config
+})
+
+api.interceptors.response.use(
+  (response) => {
+    clearTimeout(response.config._slowTimer)
+    if (_isSlow) { _isSlow = false; _slowListeners.forEach((fn) => fn(false)) }
+    return response
+  },
+  (error) => {
+    if (error.config?._slowTimer) clearTimeout(error.config._slowTimer)
+    if (_isSlow) { _isSlow = false; _slowListeners.forEach((fn) => fn(false)) }
+    return Promise.reject(error)
+  }
+)
 
 // ── Simple in-memory cache ──────────────────────────────────────────────────
 const _cache = {}
