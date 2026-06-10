@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
-  getVirtualPortfolio, buyStock, sellStock,
+  getVirtualAccount, getVirtualPortfolio, buyStock, sellStock,
   getVirtualTransactions, getLeaderboard, getAchievements,
   getAICoach, resetVirtualAccount, searchCompanies, getStockQuote,
 } from '../api/client'
@@ -31,14 +31,17 @@ export default function VirtualTradingPage() {
   const [activeTab, setActiveTab] = useState('portfolio')
 
   // ── Data state ──────────────────────────────────────────────────────────────
-  const [portfolio,     setPortfolio]     = useState(null)
+  const [account,       setAccount]       = useState(null)   // fast stats (no live prices)
+  const [portfolio,     setPortfolio]     = useState(null)   // full holdings with live prices
   const [transactions,  setTransactions]  = useState([])
   const [leaderboard,   setLeaderboard]   = useState(null)
   const [achievements,  setAchievements]  = useState([])
   const [aiCoach,       setAICoach]       = useState(null)
 
   // ── Loading state ────────────────────────────────────────────────────────────
+  const [loadingAccount,      setLoadingAccount]      = useState(false)
   const [loadingPortfolio,    setLoadingPortfolio]    = useState(false)
+  const [portfolioError,      setPortfolioError]      = useState(false)
   const [loadingTransactions, setLoadingTransactions] = useState(false)
   const [loadingLeaderboard,  setLoadingLeaderboard]  = useState(false)
   const [loadingAchievements, setLoadingAchievements] = useState(false)
@@ -59,17 +62,45 @@ export default function VirtualTradingPage() {
 
   const searchTimeout = useRef(null)
 
-  // ── Load portfolio on mount ──────────────────────────────────────────────────
+  // ── Load account (fast — no live prices, just DB balance) ───────────────────
+  const loadAccount = useCallback(async () => {
+    if (!userId) return
+    setLoadingAccount(true)
+    try {
+      const res = await getVirtualAccount(userId)
+      setAccount(res.data)
+    } catch (e) {
+      console.error('Account load error', e)
+    } finally { setLoadingAccount(false) }
+  }, [userId])
+
+  // ── Load full portfolio (slower — fetches live prices for holdings) ──────────
   const loadPortfolio = useCallback(async () => {
     if (!userId) return
     setLoadingPortfolio(true)
+    setPortfolioError(false)
     try {
       const res = await getVirtualPortfolio(userId)
       setPortfolio(res.data)
+      // Sync account stats from portfolio response (most up-to-date)
+      setAccount(prev => ({
+        ...prev,
+        cash_balance:    res.data.cash_balance,
+        portfolio_value: res.data.portfolio_value,
+        return_percentage: res.data.return_percentage,
+        total_pnl:       res.data.total_pnl,
+      }))
     } catch (e) {
       console.error('Portfolio load error', e)
+      setPortfolioError(true)
     } finally { setLoadingPortfolio(false) }
   }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    loadAccount()      // show stats immediately (fast)
+    loadPortfolio()    // load holdings in background (may be slow on cold start)
+  }, [userId, loadAccount, loadPortfolio])
 
   const loadTransactions = useCallback(async () => {
     if (!userId) return
@@ -97,11 +128,6 @@ export default function VirtualTradingPage() {
       setAchievements(res.data.achievements || [])
     } catch {} finally { setLoadingAchievements(false) }
   }, [userId])
-
-  useEffect(() => {
-    if (!userId) return
-    loadPortfolio()
-  }, [userId, loadPortfolio])
 
   useEffect(() => {
     if (!userId) return
@@ -247,14 +273,14 @@ export default function VirtualTradingPage() {
             </div>
           </div>
 
-          {/* Stats strip */}
-          {portfolio ? (
+          {/* Stats strip — uses fast account data, falls back to skeleton */}
+          {account ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Portfolio Value', value: fmt(portfolio.portfolio_value), sub: portfolio.return_percentage >= 0 ? `+${fmtN(portfolio.return_percentage)}%` : `${fmtN(portfolio.return_percentage)}%`, pos: portfolio.return_percentage >= 0 },
-                { label: 'Available Cash',  value: fmt(portfolio.cash_balance),    sub: 'to deploy', pos: true },
-                { label: 'Total P&L',       value: fmt(portfolio.total_pnl),       sub: portfolio.total_pnl >= 0 ? 'Profit' : 'Loss', pos: portfolio.total_pnl >= 0 },
-                { label: 'Holdings',        value: portfolio.holdings?.length || 0, sub: 'stocks', pos: true },
+                { label: 'Portfolio Value', value: fmt(account.portfolio_value), sub: account.return_percentage !== undefined ? (account.return_percentage >= 0 ? `+${fmtN(account.return_percentage)}%` : `${fmtN(account.return_percentage)}%`) : '—', pos: (account.return_percentage ?? 0) >= 0 },
+                { label: 'Available Cash',  value: fmt(account.cash_balance),    sub: 'to deploy', pos: true },
+                { label: 'Total P&L',       value: account.total_pnl !== undefined ? fmt(account.total_pnl) : '—', sub: (account.total_pnl ?? 0) >= 0 ? 'Profit' : 'Loss', pos: (account.total_pnl ?? 0) >= 0 },
+                { label: 'Holdings',        value: portfolio?.holdings?.length ?? '—', sub: 'stocks', pos: true },
               ].map(({ label, value, sub, pos }) => (
                 <div key={label} className="rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <p className="text-xs text-slate-400 mb-1">{label}</p>
@@ -334,6 +360,19 @@ export default function VirtualTradingPage() {
               {loadingPortfolio ? (
                 <div className="p-6 space-y-3">
                   {[1,2,3].map(i => <div key={i} className="h-14 rounded-xl animate-pulse" style={{ background: 'var(--bg-secondary)' }} />)}
+                </div>
+              ) : portfolioError ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <AlertCircle size={28} className="mb-3" style={{ color: '#FF9933' }} />
+                  <p className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Could not load holdings</p>
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>The server may be waking up. Please try again.</p>
+                  <button
+                    onClick={loadPortfolio}
+                    className="px-4 py-2 rounded-xl text-sm font-bold text-white flex items-center gap-2"
+                    style={{ background: 'linear-gradient(135deg,#FF9933,#e6830a)' }}
+                  >
+                    <RefreshCw size={14} /> Retry
+                  </button>
                 </div>
               ) : !portfolio?.holdings?.length ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
