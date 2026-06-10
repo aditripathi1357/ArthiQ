@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageSquare, Send, Bot, User, RefreshCw, AlertTriangle, ArrowLeft, ArrowUpRight, Shield, Award, CheckCircle } from 'lucide-react'
+import { Send, User, RefreshCw, AlertTriangle, ArrowLeft, ArrowUpRight, Shield } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const STORAGE_KEY = 'arthiq_chat_page_history'
 
 // Custom animated robot character component
 const AnimatedRobot = ({ className = "w-10 h-10", isMini = false }) => {
@@ -67,13 +68,30 @@ const STARTER_PROMPTS = [
   { text: "Explain P/E Ratio with HDFC Bank as example", label: "Learn Concepts" },
 ]
 
+// Load messages from localStorage, fall back to initial message
+function loadStoredMessages() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+  return [INITIAL_MESSAGE]
+}
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState([INITIAL_MESSAGE])
+  const [messages, setMessages] = useState(loadStoredMessages)
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
   
   const messagesEndRef = useRef(null)
+
+  // Persist messages to localStorage on every change
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)) } catch {}
+  }, [messages])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -96,7 +114,7 @@ export default function ChatPage() {
     try {
       const response = await axios.post(`${API_BASE}/api/chat`, {
         messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
-      })
+      }, { timeout: 45000 })
       
       if (response.data && response.data.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: response.data.content }])
@@ -120,8 +138,10 @@ export default function ChatPage() {
   }
 
   const handleClear = () => {
-    setMessages([INITIAL_MESSAGE])
+    const fresh = [INITIAL_MESSAGE]
+    setMessages(fresh)
     setErrorMsg(null)
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch {}
   }
 
   return (

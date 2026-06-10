@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { MessageSquare, Send, X, Bot, User, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Send, X, User, RefreshCw, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+const STORAGE_KEY = 'arthiq_chat_widget_history'
 
 // Custom animated robot character component
 const AnimatedRobot = ({ className = "w-10 h-10", isMini = false }) => {
@@ -46,42 +48,46 @@ const AnimatedRobot = ({ className = "w-10 h-10", isMini = false }) => {
 
 const INITIAL_MESSAGE = {
   role: 'assistant',
-  content: `Namaste! 🙏 I'm ArthiqAI Assistant — your smart investment companion.
+  content: `Namaste! 🙏 I'm ArthiqAI Assistant — your smart investment companion.\n\nHere's what I can do for you right now:\n\n📈 Live stock prices & market snapshot\n🔍 Deep analysis of any NSE/BSE stock\n💡 Investment suggestions (short, medium & long term)\n📰 Latest market news & earnings updates\n💰 Mutual fund & SIP recommendations\n🎯 Portfolio review & strategy\n\nWhat would you like to explore today?`
+}
 
-Here's what I can do for you right now:
-
-📈 Live stock prices & market snapshot
-🔍 Deep analysis of any NSE/BSE stock
-💡 Investment suggestions (short, medium & long term)
-📰 Latest market news & earnings updates
-💰 Mutual fund & SIP recommendations
-🎯 Portfolio review & strategy
-
-What would you like to explore today?`
+// Load messages from localStorage, fall back to initial message
+function loadStoredMessages() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+  return [INITIAL_MESSAGE]
 }
 
 export default function ChatAssistant() {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState([INITIAL_MESSAGE])
+  // ✅ ALL hooks declared before any conditional return
+  const [messages, setMessages] = useState(loadStoredMessages)
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(null)
-  
   const messagesEndRef = useRef(null)
 
-  // Don't render on the dedicated chat page
-  if (location.pathname === '/chat') return null
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  // Persist chat history to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    } catch {}
+  }, [messages])
 
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom()
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, isOpen, isLoading])
+
+  // ✅ Don't render on /chat page — but AFTER all hooks (no hooks violation)
+  if (location.pathname === '/chat') return null
 
   const handleSend = async (e) => {
     e.preventDefault()
@@ -96,10 +102,9 @@ export default function ChatAssistant() {
     setErrorMsg(null)
 
     try {
-      // Format messages history for endpoint
       const response = await axios.post(`${API_BASE}/api/chat`, {
         messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
-      })
+      }, { timeout: 45000 })
       
       if (response.data && response.data.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: response.data.content }])
@@ -108,15 +113,17 @@ export default function ChatAssistant() {
       }
     } catch (err) {
       console.error('Chat error:', err)
-      setErrorMsg('I\'m having trouble connecting to my servers right now. Please try again.')
+      setErrorMsg('Having trouble connecting. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleClear = () => {
-    setMessages([INITIAL_MESSAGE])
+    const fresh = [INITIAL_MESSAGE]
+    setMessages(fresh)
     setErrorMsg(null)
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch {}
   }
 
   return (
@@ -129,6 +136,12 @@ export default function ChatAssistant() {
           style={{ boxShadow: '0 8px 32px rgba(255,153,51,0.3)' }}
         >
           <AnimatedRobot className="w-12 h-12" isMini={false} />
+          {/* Unread indicator dot if messages > 1 (user has chatted) */}
+          {messages.length > 1 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white text-[9px] font-black text-white flex items-center justify-center">
+              {Math.min(messages.filter(m => m.role === 'user').length, 9)}
+            </span>
+          )}
           {/* Tooltip */}
           <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md border border-slate-700 pointer-events-none whitespace-nowrap">
             Chat with ArthiqAI!
@@ -139,27 +152,30 @@ export default function ChatAssistant() {
       {/* Chat Window */}
       {isOpen && (
         <div 
-          className="w-96 h-[500px] bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="w-96 h-[500px] bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-2xl"
           style={{ boxShadow: '0 20px 48px rgba(15,23,42,0.15)' }}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#0f172a] to-[#1e293b] px-5 py-4 flex items-center justify-between text-white border-b border-slate-700">
+          <div className="bg-gradient-to-r from-[#0f172a] to-[#1e293b] px-5 py-4 flex items-center justify-between text-white border-b border-slate-700 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#FF9933]/20 flex items-center justify-center overflow-hidden">
                 <AnimatedRobot className="w-8 h-8" isMini={false} />
               </div>
               <div>
                 <h3 className="font-bold text-base leading-snug text-white">ArthiqAI Assistant</h3>
-                <span className="text-xs text-slate-200 font-bold uppercase tracking-wider mt-0.5 block">AI Advisor</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs text-slate-300 font-semibold">Live · {messages.filter(m=>m.role==='user').length} messages</span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleClear}
-                title="Reset conversation"
+                title="Clear conversation"
                 className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={15} />
               </button>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -171,22 +187,22 @@ export default function ChatAssistant() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-3 min-h-0">
             {messages.map((msg, idx) => {
               const isAssistant = msg.role === 'assistant'
               return (
-                <div key={idx} className={`flex items-start gap-3 ${isAssistant ? '' : 'flex-row-reverse'}`}>
+                <div key={idx} className={`flex items-start gap-2.5 ${isAssistant ? '' : 'flex-row-reverse'}`}>
                   {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden ${
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden ${
                     isAssistant ? 'bg-[#FF9933]/12 border border-[#FF9933]/25' : 'bg-slate-200'
                   }`}>
-                    {isAssistant ? <AnimatedRobot className="w-7 h-7" isMini={true} /> : <User size={15} className="text-slate-600" />}
+                    {isAssistant ? <AnimatedRobot className="w-6 h-6" isMini={true} /> : <User size={13} className="text-slate-600" />}
                   </div>
                   {/* Bubble */}
-                  <div className={`max-w-[75%] rounded-2xl p-3.5 text-base leading-relaxed ${
+                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                     isAssistant 
-                      ? 'bg-white text-slate-900 border border-slate-200 rounded-tl-none shadow-sm font-semibold' 
-                      : 'bg-[#0f172a] text-white rounded-tr-none font-semibold'
+                      ? 'bg-white text-slate-900 border border-slate-200 rounded-tl-none shadow-sm' 
+                      : 'bg-[#0f172a] text-white rounded-tr-none'
                   }`}>
                     <p className="whitespace-pre-line">{msg.content}</p>
                   </div>
@@ -194,24 +210,24 @@ export default function ChatAssistant() {
               )
             })}
 
-            {/* Loading / Typing indicator */}
+            {/* Typing indicator */}
             {isLoading && (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#FF9933]/12 border border-[#FF9933]/25 flex items-center justify-center shrink-0 overflow-hidden">
-                  <AnimatedRobot className="w-7 h-7" isMini={true} />
+              <div className="flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-[#FF9933]/12 border border-[#FF9933]/25 flex items-center justify-center shrink-0 overflow-hidden">
+                  <AnimatedRobot className="w-6 h-6" isMini={true} />
                 </div>
-                <div className="bg-white text-slate-500 border border-slate-200 rounded-2xl rounded-tl-none p-3.5 flex gap-1.5 items-center shadow-sm">
-                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none px-3.5 py-3 flex gap-1.5 items-center shadow-sm">
+                  <span className="w-2 h-2 bg-[#FF9933] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-[#FF9933] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-[#FF9933] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             )}
 
-            {/* Error Message Box */}
+            {/* Error */}
             {errorMsg && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3.5 flex items-start gap-2.5">
-                <AlertTriangle size={16} className="shrink-0 mt-0.5 text-red-500" />
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3 flex items-start gap-2">
+                <AlertTriangle size={14} className="shrink-0 mt-0.5 text-red-500" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -219,22 +235,22 @@ export default function ChatAssistant() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer Input Area */}
-          <form onSubmit={handleSend} className="p-3.5 bg-white border-t border-slate-100 flex items-center gap-2.5">
+          {/* Input */}
+          <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 shrink-0">
             <input
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               placeholder="Ask about stocks, mutual funds..."
               disabled={isLoading}
-              className="flex-1 bg-slate-100 border border-transparent focus:border-slate-200 focus:bg-white text-slate-800 text-sm rounded-xl px-4 py-3 outline-none transition-all"
+              className="flex-1 bg-slate-100 border border-transparent focus:border-slate-200 focus:bg-white text-slate-800 text-sm rounded-xl px-3.5 py-2.5 outline-none transition-all"
             />
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="w-10 h-10 bg-[#FF9933] hover:bg-[#e6830a] disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center shrink-0 transition-colors"
+              className="w-9 h-9 bg-[#FF9933] hover:bg-[#e6830a] disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center shrink-0 transition-colors"
             >
-              <Send size={16} />
+              <Send size={15} />
             </button>
           </form>
         </div>
