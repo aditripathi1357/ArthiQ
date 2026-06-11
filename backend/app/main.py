@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from app.config import get_settings
+from app.database import engine, Base
 from app.routers import companies, stocks, forex, news, insights, market, chat
 from app.routers import calendar as calendar_router
 from app.routers import notifications as notifications_router
@@ -31,6 +32,22 @@ logger = logging.getLogger(__name__)
 logging.getLogger("app.utils.cache").setLevel(logging.WARNING)
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+async def _create_tables():
+    """
+    Auto-create all ORM tables if they don't exist yet.
+    This is safe to run every startup — `checkfirst=True` skips existing tables.
+    On Render's free PostgreSQL the tables may never have been migrated, so we
+    create them directly from the SQLAlchemy metadata as a reliable fallback.
+    """
+    import app.models  # noqa: F401 — registers all models with Base.metadata
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+        logger.info("DB tables verified / created OK")
+    except Exception as exc:
+        logger.error("DB table creation failed (non-fatal): %s", exc)
 
 
 async def _init_market_data():
@@ -56,6 +73,9 @@ async def lifespan(app: FastAPI):
         "Starting %s v%s (%s)",
         settings.APP_NAME, settings.APP_VERSION, settings.ENVIRONMENT,
     )
+    # Ensure all DB tables exist before accepting requests
+    await _create_tables()
+
     start_scheduler()
 
     # Warm up market data in the background
