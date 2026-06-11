@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         """Async database URL for asyncpg driver."""
-        url = self.database_url
+        url = self.database_url.strip() if self.database_url else ""
         if not url:
             url = (
                 f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL_SYNC(self) -> str:
         """Sync database URL for Alembic migrations."""
-        url = self.database_url
+        url = self.database_url.strip() if self.database_url else ""
         if not url:
             url = (
                 f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
