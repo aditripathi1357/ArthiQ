@@ -137,6 +137,29 @@ async def health_check():
     }
 
 
+@app.get("/debug/db", tags=["System"])
+async def debug_db():
+    """Check database connectivity and show which DB host is configured."""
+    import re
+    url = settings.DATABASE_URL
+    # Mask password but show host so we can diagnose connection issues
+    masked = re.sub(r'://([^:]+):([^@]+)@', r'://\1:***@', url)
+    db_ok = False
+    db_error = None
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(lambda c: c.execute(__import__('sqlalchemy').text('SELECT 1')))
+        db_ok = True
+    except Exception as exc:
+        db_error = str(exc)
+    return {
+        "db_url_masked": masked,
+        "db_connected": db_ok,
+        "db_error": db_error,
+        "has_database_url_env": bool(__import__('os').environ.get('DATABASE_URL') or __import__('os').environ.get('database_url')),
+    }
+
+
 @app.get("/", tags=["System"])
 async def root():
     """API root -- redirect to docs."""
